@@ -1,4 +1,4 @@
-# How to run the project
+# How to run the examples
 1. Install conda: https://docs.conda.io/projects/conda/en/latest/user-guide/install/
 2. Create new environment from environment.yaml: `conda env create -f environment.yml`
 3. For Yelp examples:
