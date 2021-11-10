@@ -27,7 +27,7 @@ def translate(sentence):
     encoder_outputs = model.encoder(source_vector, source_mask)
 
     outputs = torch.zeros(args.max_words).type_as(source_vector.data)
-    outputs[0] = torch.LongTensor([vectorizer.target_vocab.stoi[vectorizer.SOS]])
+    outputs[0] = torch.LongTensor([vectorizer.target_vocab[vectorizer.SOS]])
 
     for i in range(1, args.max_words):
         target_mask = vectorizer.nopeak_mask(i).unsqueeze(0)
@@ -38,11 +38,11 @@ def translate(sentence):
         val, ix = out[:, -1].data.topk(1)
 
         outputs[i] = ix[0][0]
-        if ix[0][0] == vectorizer.target_vocab.stoi[vectorizer.EOS]:
+        if ix[0][0] == vectorizer.target_vocab[vectorizer.EOS]:
             break
 
     return ' '.join(
-        [vectorizer.target_vocab.itos[ix] for ix in outputs[1:i]]
+        [vectorizer.target_vocab.get_itos()[ix] for ix in outputs[1:i]]
     )
 
 test_samples = 10

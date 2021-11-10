@@ -1,9 +1,10 @@
+import os
 from argparse import Namespace
 import torch
 
 args = Namespace(
     # Filepaths
-    lang='pl',
+    lang='pol',
 
     # Dataset parameters
     max_words=10,
@@ -33,11 +34,11 @@ args = Namespace(
     cuda=False,
 )
 
-args.model_state_filepath = f'nosync/model-{args.lang}.pth'
-args.training_history_filepath = f'nosync/traing_history-{args.lang}.json'
-args.dataset_filepath = f'nosync/{args.lang}.txt'
-args.train_filepath = f'nosync/{args.lang}_train.txt'
-args.vectorizer_filepath = f'nosync/vectorizer-{args.lang}.json'
+args.model_state_filepath = f'model-data/model-{args.lang}.pth'
+args.training_history_filepath = f'model-data/traing_history-{args.lang}.json'
+args.dataset_filepath = f'../data/{args.lang}.txt'
+args.train_filepath = f'model-data/{args.lang}_train.txt'
+args.vectorizer_filepath = f'model-data/vectorizer-{args.lang}.json'
 
 # Check CUDA
 if not torch.cuda.is_available():
@@ -49,3 +50,9 @@ else:
     args.device = 'cpu'
 
 torch.manual_seed(args.seed)
+
+# create directories
+os.makedirs(os.path.dirname(args.model_state_filepath), exist_ok=True)
+os.makedirs(os.path.dirname(args.training_history_filepath), exist_ok=True)
+os.makedirs(os.path.dirname(args.train_filepath), exist_ok=True)
+os.makedirs(os.path.dirname(args.vectorizer_filepath), exist_ok=True)

@@ -5,8 +5,9 @@ from torchtext.data import get_tokenizer
 from torchtext.vocab import vocab, GloVe
 
 class ReviewVectorizer():
-    def __init__(self, review_vocab, rating_vocab, max_size, max_review_words, tokenizer, language):
+    def __init__(self, review_vocab, review_vectors, rating_vocab, max_size, max_review_words, tokenizer, language):
         self.review_vocab = review_vocab
+        self.review_vectors = review_vectors
         self.rating_vocab = rating_vocab
         self.max_size = max_size
         self.max_review_words = max_review_words
@@ -33,6 +34,18 @@ class ReviewVectorizer():
 
         return review_vector, len(review_indices)
 
+    @classmethod
+    def load_review_vocab_and_vectors_from_glove(cls):
+        glove_vectors = GloVe(name='6B', dim=100)
+        review_vocab = vocab(glove_vectors.stoi)
+        review_vocab.append_token('<pad>')
+        review_vocab.append_token('<unk>')
+        review_vocab.set_default_index(review_vocab['<unk>'])
+
+        review_vectors = torch.zeros([len(review_vocab), 100])
+        review_vectors[:len(glove_vectors.vectors)] = glove_vectors.vectors
+
+        return review_vocab, review_vectors
 
     @classmethod
     def from_reviews_list(cls, reviews, max_size, max_review_words, tokenizer='basic_english', language='en'):
@@ -48,38 +61,28 @@ class ReviewVectorizer():
 
             rating_counts[review['rating']] += 1
 
-        # review_vocab = Vocab(word_counts, max_size=max_size)
-        # review_vocab.load_vectors('glove.6B.100d')
-        # rating_vocab = Vocab(rating_counts, specials=[])
-        review_vocab = vocab(OrderedDict(word_counts.most_common(max_size)))
-        review_vocab.insert_token('<pad>', 0)
-        review_vocab.insert_token('<unk>', 0)
-        review_vocab.set_default_index(review_vocab['<unk>'])
+        review_vocab, review_vectors = cls.load_review_vocab_and_vectors_from_glove()
+
         rating_vocab = vocab(rating_counts)
 
-        return cls(review_vocab, rating_vocab, max_size, max_review_words, tokenizer, language)
+        return cls(review_vocab, review_vectors, rating_vocab, max_size, max_review_words, tokenizer, language)
 
     @classmethod
     def from_serializable(cls, contents):
-        review_tokens = contents['review_tokens']
         rating_tokens = contents['rating_tokens']
         max_size = contents['max_size']
         max_review_words = contents['max_review_words']
         tokenizer = contents['tokenizer']
         language = contents['language']
 
-        # review_vocab = Vocab(review_counter, max_size=max_size)
-        # # review_vocab.load_vectors('glove.6B.100d')
-        # rating_vocab = Vocab(rating_counter, specials=[])
-        # review_vocab = vocab(OrderedDict([(token, 1) for token in review_tokens]))
-        review_vocab = GloVe(name='6B', dim=100)
+        review_vocab, review_vectors = cls.load_review_vocab_and_vectors_from_glove()
+
         rating_vocab = vocab(OrderedDict([(token, 1) for token in rating_tokens]))
 
-        return cls(review_vocab, rating_vocab, max_size, max_review_words, tokenizer, language)
+        return cls(review_vocab, review_vectors, rating_vocab, max_size, max_review_words, tokenizer, language)
 
     def to_serializable(self):
-        return {'review_tokens': self.review_vocab.get_itos(),
-                'rating_tokens': self.rating_vocab.get_itos(),
+        return {'rating_tokens': self.rating_vocab.get_itos(),
                 'max_size': self.max_size,
                 'max_review_words': self.max_review_words,
                 'tokenizer': self.tokenizer,

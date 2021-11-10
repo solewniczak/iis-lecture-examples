@@ -1,7 +1,7 @@
-from collections import Counter
+from collections import Counter, OrderedDict
 
 import torch
-from torchtext.vocab import Vocab
+from torchtext.vocab import vocab
 
 
 class NMTVectorizer():
@@ -9,11 +9,19 @@ class NMTVectorizer():
     PAD = '<pad>'
     SOS = '<sos>'
     EOS = '<eos>'
-    SPECIALS = (UNK, PAD, SOS, EOS)
+    specials = (UNK, PAD, SOS, EOS)
 
-    def __init__(self, source_counter, target_counter, max_words):
-        self.source_vocab = Vocab(source_counter, specials=self.SPECIALS)
-        self.target_vocab = Vocab(target_counter, specials=self.SPECIALS)
+    def __init__(self, source_tokens, target_tokens, max_words):
+        self.source_vocab = vocab(OrderedDict([(token, 1) for token in source_tokens]))
+        for special in self.specials:
+            if special not in self.source_vocab: self.source_vocab.insert_token(special, 0)
+        self.source_vocab.set_default_index(self.source_vocab[self.UNK])
+
+        self.target_vocab = vocab(OrderedDict([(token, 1) for token in target_tokens]))
+        for special in self.specials:
+            if special not in self.target_vocab: self.target_vocab.insert_token(special, 0)
+        self.target_vocab.set_default_index(self.source_vocab[self.UNK])
+
         self.max_words = max_words
 
     def _vectorize(self, indices, vector_length=-1):
@@ -74,17 +82,17 @@ class NMTVectorizer():
             for word in pair[1].split():
                 target_counter[word] += 1
 
-        return cls(source_counter, target_counter, max_words)
+        return cls(source_counter.keys(), target_counter.keys(), max_words)
 
     @classmethod
     def from_serializable(cls, contents):
-        source_counter = Counter(contents['source_counter'])
-        target_counter = Counter(contents['target_counter'])
+        source_tokens = contents['source_tokens']
+        target_tokens = contents['target_tokens']
         max_words = contents['max_words']
 
-        return cls(source_counter, target_counter, max_words)
+        return cls(source_tokens, target_tokens, max_words)
 
     def to_serializable(self):
-        return {'source_counter': self.source_vocab.freqs,
-                'target_counter': self.target_vocab.freqs,
+        return {'source_tokens': self.source_vocab.get_itos(),
+                'target_tokens': self.target_vocab.get_itos(),
                 'max_words': self.max_words}

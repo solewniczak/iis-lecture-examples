@@ -4,11 +4,11 @@ from torch.nn.utils.rnn import pack_padded_sequence
 
 
 class ReviewClassifierBiGRU(nn.Module):
-    def __init__(self, input_dim, embedding_dim, hidden_dim, output_dim, padding_idx, num_layers, dropout):
+    def __init__(self, embeddings, hidden_dim, output_dim, padding_idx, num_layers, dropout):
 
         super().__init__()
-        self.embedding = nn.Embedding(input_dim, embedding_dim, padding_idx=padding_idx)
-        self.rnn = nn.GRU(embedding_dim, hidden_dim,
+        self.embedding = nn.Embedding.from_pretrained(embeddings, freeze=True, padding_idx=padding_idx)
+        self.rnn = nn.GRU(embeddings.shape[1], hidden_dim,
                           batch_first=True,
                           num_layers=num_layers,
                           bidirectional=True,

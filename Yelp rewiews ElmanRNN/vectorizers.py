@@ -67,6 +67,8 @@ class ReviewVectorizer():
         language = contents['language']
 
         review_vocab = vocab(OrderedDict([(token, 1) for token in review_tokens]))
+        review_vocab.set_default_index(review_vocab['<unk>'])
+
         rating_vocab = vocab(OrderedDict([(token, 1) for token in rating_tokens]))
 
         return cls(review_vocab, rating_vocab, max_size, max_review_words, tokenizer, language)

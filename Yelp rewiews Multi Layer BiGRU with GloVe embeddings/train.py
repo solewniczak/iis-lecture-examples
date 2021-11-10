@@ -3,7 +3,6 @@ import os
 
 import torch
 from torch import nn, optim
-from torchtext.data import get_tokenizer
 from tqdm import tqdm
 
 from args import args
@@ -28,8 +27,7 @@ dataset = ReviewDataset.load_dataset_and_make_vectorizer(args.reviews_json_train
 dataset.save_vectorizer(args.vectorizer_filepath)
 vectorizer = dataset.get_vectorizer()
 
-classifier = ReviewClassifierBiGRU(input_dim=len(vectorizer.review_vocab),
-                                 embedding_dim=args.embedding_dim,
+classifier = ReviewClassifierBiGRU(embeddings=vectorizer.review_vectors,
                                  hidden_dim=args.hidden_features,
                                  output_dim=len(vectorizer.rating_vocab),
                                  padding_idx=vectorizer.review_vocab['<pad>'],
@@ -37,14 +35,6 @@ classifier = ReviewClassifierBiGRU(input_dim=len(vectorizer.review_vocab),
                                  dropout=args.dropout_p)
 classifier.to(args.device)
 print(f'The models has {count_parameters(classifier):,} trainable parameters')
-
-# using pretraining embeddings
-pretrained_embeddings = vectorizer.review_vocab.vectors
-classifier.embedding.weight.data.copy_(pretrained_embeddings)
-unk_idx = vectorizer.review_vocab.stoi['<unk>']
-pad_idx = vectorizer.review_vocab.stoi['<pad>']
-classifier.embedding.weight.data[unk_idx] = torch.zeros(args.embedding_dim)
-classifier.embedding.weight.data[pad_idx] = torch.zeros(args.embedding_dim)
 
 loss_func = nn.CrossEntropyLoss()
 optimizer = optim.Adam(classifier.parameters(), lr=args.learning_rate)

@@ -22,8 +22,7 @@ test_dataset = ReviewDataset.load_dataset_and_load_vectorizer(args.reviews_json_
                                                               args.vectorizer_filepath)
 
 vectorizer = test_dataset.get_vectorizer()
-classifier = ReviewClassifierBiGRU(input_dim=len(vectorizer.review_vocab),
-                                 embedding_dim=args.embedding_dim,
+classifier = ReviewClassifierBiGRU(embeddings=vectorizer.review_vectors,
                                  hidden_dim=args.hidden_features,
                                  output_dim=len(vectorizer.rating_vocab),
                                  padding_idx=vectorizer.review_vocab['<pad>'],

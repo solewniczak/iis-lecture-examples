@@ -9,21 +9,17 @@ class NMTVectorizer():
     PAD = '<pad>'
     SOS = '<sos>'
     EOS = '<eos>'
+    specials = (UNK, PAD, SOS, EOS)
 
     def __init__(self, source_tokens, target_tokens, max_words):
         self.source_vocab = vocab(OrderedDict([(token, 1) for token in source_tokens]))
-        self.source_vocab.insert_token(self.UNK, 0)
-        self.source_vocab.insert_token(self.PAD, 0)
-        self.source_vocab.insert_token(self.SOS, 0)
-        self.source_vocab.insert_token(self.EOS, 0)
+        for special in self.specials:
+            if special not in self.source_vocab: self.source_vocab.insert_token(special, 0)
         self.source_vocab.set_default_index(self.source_vocab[self.UNK])
 
-
         self.target_vocab = vocab(OrderedDict([(token, 1) for token in target_tokens]))
-        self.target_vocab.insert_token(self.UNK, 0)
-        self.target_vocab.insert_token(self.PAD, 0)
-        self.target_vocab.insert_token(self.SOS, 0)
-        self.target_vocab.insert_token(self.EOS, 0)
+        for special in self.specials:
+            if special not in self.target_vocab: self.target_vocab.insert_token(special, 0)
         self.target_vocab.set_default_index(self.source_vocab[self.UNK])
 
         self.max_words = max_words
@@ -98,5 +94,5 @@ class NMTVectorizer():
 
     def to_serializable(self):
         return {'source_tokens': self.source_vocab.get_itos(),
-                'target_counter': self.target_vocab.get_itos(),
+                'target_tokens': self.target_vocab.get_itos(),
                 'max_words': self.max_words}

@@ -58,7 +58,7 @@ def translate(batch_dict):
     for source, target, attention_matrix in zip(batch_dict['x_source'], y_pred, attention_matrixes):
         source_words = []
         for ind in source[1:]:  # skip <sos>
-            word = vectorizer.source_vocab.itos[ind]
+            word = vectorizer.source_vocab.get_itos()[ind]
             if word == vectorizer.EOS:
                 break
             source_words.append(word)
@@ -67,7 +67,7 @@ def translate(batch_dict):
         target_words = []
         for prob in target:
             ind = torch.argmax(prob).item()
-            word = vectorizer.target_vocab.itos[ind]
+            word = vectorizer.target_vocab.get_itos()[ind]
             if word == vectorizer.EOS or word == vectorizer.PAD:
                 break
             target_words.append(word)
